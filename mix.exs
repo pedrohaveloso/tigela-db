@@ -1,12 +1,12 @@
-defmodule TigelaDB.MixProject do
+defmodule Tigela.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :tigela_db,
+      app: :tigela,
       version: "0.1.0",
       elixir: "~> 1.16",
-      escript: [main_module: TigelaDB],
+      escript: [main_module: Tigela],
       deps: deps()
     ]
   end
