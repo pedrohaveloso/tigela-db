@@ -51,10 +51,13 @@ defmodule Tigela.Transaction do
       update_state(fn state ->
         state
         |> Map.update(:transactions, [], fn transactions ->
-          {last_transaction, transactions} = List.pop_at(transactions, -1)
-          {transaction, transactions} = List.pop_at(transactions, -1)
+          [
+            last_transaction,
+            previous_transaction
+            | transactions
+          ] = Enum.reverse(transactions)
 
-          transaction = Map.merge(transaction, last_transaction)
+          transaction = Map.merge(previous_transaction, last_transaction)
 
           transactions ++ [transaction]
         end)
