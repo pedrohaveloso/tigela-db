@@ -4,10 +4,13 @@ defmodule Tigela do
 
     Tigela.Transaction.begin()
     Tigela.Transaction.set("hello", "world")
+    Tigela.Transaction.set("mal", "bem")
     Tigela.Transaction.begin()
     Tigela.Transaction.set("hello", "man")
     IO.puts(Tigela.Transaction.get("hello"))
-    Tigela.Transaction.rollback()
+    Tigela.Transaction.commit()
+    content = Tigela.Transaction.commit()
+    IO.inspect(content)
     IO.puts(Tigela.Transaction.get("hello"))
 
     # unless File.exists?("./tmp") do

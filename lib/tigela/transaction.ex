@@ -11,30 +11,70 @@ defmodule Tigela.Transaction do
     )
   end
 
+  @spec begin() :: :ok
   def begin() do
-    Agent.update(__MODULE__, fn map ->
-      Map.put(map, :level, Map.get(map, :level, 0) + 1)
-      |> Map.put(:transactions, Map.get(map, :transactions, []) ++ [%{}])
+    update_state(fn state ->
+      level = Map.get(state, :level, 0) + 1
+      transactions = Map.get(state, :transactions, []) ++ [%{}]
+
+      state
+      |> Map.put(:level, level)
+      |> Map.put(:transactions, transactions)
     end)
   end
 
+  @spec rollback() :: :ok
   def rollback() do
-    if level() > 0 do
-      Agent.update(__MODULE__, fn map ->
-        level = Map.get(map, :level, 1)
+    level = level()
 
-        Map.put(map, :level, level - 1)
-        |> Map.put(
-          :transactions,
-          Enum.take(Map.get(map, :transactions, []), level - 1)
-        )
+    if level > 0 do
+      rollback(level)
+    end
+
+    :ok
+  end
+
+  defp rollback(level) do
+    update_state(fn state ->
+      level = level - 1
+
+      state
+      |> Map.put(:level, level)
+      |> Map.update(:transactions, [], &Enum.take(&1, level))
+    end)
+  end
+
+  def commit() do
+    level = level()
+
+    if level > 1 do
+      update_state(fn state ->
+        state
+        |> Map.update(:transactions, [], fn transactions ->
+          {last_transaction, transactions} = List.pop_at(transactions, -1)
+          {transaction, transactions} = List.pop_at(transactions, -1)
+
+          transaction = Map.merge(transaction, last_transaction)
+
+          transactions ++ [transaction]
+        end)
+        |> Map.put(:level, level - 1)
       end)
+    else
+      key_values =
+        get_state(fn state ->
+          state |> Map.get(:transactions) |> Enum.at(0)
+        end)
+
+      rollback()
+
+      key_values
     end
   end
 
   @spec level() :: integer()
   def level() do
-    Agent.get(__MODULE__, fn map -> Map.get(map, :level) end)
+    get_state(fn state -> Map.get(state, :level) end)
   end
 
   @spec get(Map.key()) :: Map.value()
@@ -44,18 +84,17 @@ defmodule Tigela.Transaction do
 
   defp get(level, key) do
     value =
-      Agent.get(
-        __MODULE__,
-        fn map ->
-          Map.get(map, :transactions, [])
-          |> Enum.at(level, %{})
-          |> Map.get(key, nil)
-        end
-      )
+      get_state(fn state ->
+        state
+        |> Map.get(:transactions, [])
+        |> Enum.at(level, %{})
+        |> Map.get(key)
+      end)
 
-    cond do
-      level > 0 && value == nil -> get(level - 1, key)
-      true -> value
+    if level > 0 && is_nil(value) do
+      get(level - 1, key)
+    else
+      value
     end
   end
 
@@ -63,14 +102,21 @@ defmodule Tigela.Transaction do
   def set(key, value) do
     level = level() - 1
 
-    Agent.update(__MODULE__, fn map ->
-      transactions =
-        Map.get(map, :transactions, [])
-        |> List.update_at(level, fn last ->
-          Map.put(last, key, value)
-        end)
-
-      Map.put(map, :transactions, transactions)
+    update_state(fn state ->
+      state
+      |> Map.update(:transactions, [], fn transactions ->
+        List.update_at(transactions, level, &Map.put(&1, key, value))
+      end)
     end)
+  end
+
+  @spec update_state(fun()) :: :ok
+  defp update_state(fun) do
+    Agent.update(__MODULE__, fun)
+  end
+
+  @spec get_state((Agent.state() -> a)) :: a when a: var
+  defp get_state(fun) do
+    Agent.get(__MODULE__, fun)
   end
 end
