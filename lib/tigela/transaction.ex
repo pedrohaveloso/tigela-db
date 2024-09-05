@@ -3,12 +3,14 @@ defmodule Tigela.Transaction do
 
   defstruct level: 0, transactions: []
 
-  @spec start_link() :: {:error, any()} | {:ok, pid()}
-  def start_link() do
+  @spec start() :: :ok
+  def start() do
     Agent.start_link(
       fn -> %Tigela.Transaction{} end,
       name: __MODULE__
     )
+
+    :ok
   end
 
   @spec begin() :: :ok
@@ -51,11 +53,8 @@ defmodule Tigela.Transaction do
       update_state(fn state ->
         state
         |> Map.update(:transactions, [], fn transactions ->
-          [
-            last_transaction,
-            previous_transaction
-            | transactions
-          ] = Enum.reverse(transactions)
+          {last_transaction, transactions} = List.pop_at(transactions, -1)
+          {previous_transaction, transactions} = List.pop_at(transactions, -1)
 
           transaction = Map.merge(previous_transaction, last_transaction)
 
@@ -80,7 +79,7 @@ defmodule Tigela.Transaction do
     get_state(fn state -> Map.get(state, :level) end)
   end
 
-  @spec get(Map.key()) :: Map.value()
+  @spec get(String.t()) :: String.t() | nil
   def get(key) do
     get(level() - 1, key)
   end
@@ -101,7 +100,7 @@ defmodule Tigela.Transaction do
     end
   end
 
-  @spec set(Map.key(), Map.value()) :: :ok
+  @spec set(String.t(), String.t()) :: :ok
   def set(key, value) do
     level = level() - 1
 
