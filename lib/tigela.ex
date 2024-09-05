@@ -3,25 +3,38 @@ defmodule Tigela do
     Tigela.Transaction.start()
     Tigela.Persistent.start()
 
-    program()
+    Tigela.Transaction.begin()
+    Tigela.Transaction.set("x", "10")
+    Tigela.Transaction.set("y", "10")
+    Tigela.Transaction.begin()
+    Tigela.Transaction.set("x", "20")
+    Tigela.Transaction.get("x") |> IO.puts()
+    Tigela.Transaction.commit()
+    Tigela.Transaction.commit() |> IO.inspect()
+    Tigela.Transaction.get("x") |> IO.puts()
+
+    Tigela.Persistent.set("x", "10")
+    Tigela.Persistent.delete("x") |> IO.inspect()
+
+    # program()
   end
 
-  @prompt ">"
+  # @prompt ">"
 
-  @set_command "SET"
-  @set_syntax "#{@set_command} <key> <value>"
+  # @set_command "SET"
+  # @set_syntax "#{@set_command} <key> <value>"
 
-  @get_command "GET"
-  @get_syntax "#{@get_command} <key>"
+  # @get_command "GET"
+  # @get_syntax "#{@get_command} <key>"
 
-  @begin_command "BEGIN"
-  @begin_syntax "#{@begin_command}"
+  # @begin_command "BEGIN"
+  # @begin_syntax "#{@begin_command}"
 
-  @rollback_command "ROLLBACK"
-  @rollback_syntax "#{@rollback_command}"
+  # @rollback_command "ROLLBACK"
+  # @rollback_syntax "#{@rollback_command}"
 
-  @commit_command "COMMIT"
-  @commit_syntax "#{@commit_command}"
+  # @commit_command "COMMIT"
+  # @commit_syntax "#{@commit_command}"
 
   def program() do
     # ...
