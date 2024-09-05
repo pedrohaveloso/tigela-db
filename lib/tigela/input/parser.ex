@@ -1,6 +1,12 @@
 defmodule Tigela.Input.Parser do
   @commands ["BEGIN", "COMMIT", "ROLLBACK", "GET", "SET"]
 
+  @key_regex "(?:'((?:\\\\'|[^'])*)'|(\\S+))"
+  @value_regex "(?:\"((?:\\\"|[^\"])+)\"|(\\d+(?:\\.\\d+)?|TRUE|FALSE|\\S+))"
+
+  @get_regex "^GET\\s+#{@key_regex}$"
+  @set_regex "^SET\\s+#{@key_regex}\\s+#{@value_regex}$"
+
   # @spec command(String.t()) :: any()
   @doc """
 
@@ -41,14 +47,35 @@ defmodule Tigela.Input.Parser do
   end
 
   defp parse_command(input, "SET") do
-    case Regex.run(~r/^SET\s+(['"]?)([\w\s]+)\1\s+(['"]?)(.+)\3$/, input) do
-      [_, _, key, _, value] -> {:ok, {:set, key, parse_value(value)}}
-      _ -> {:error, "SET <key> <value> - Syntax error"}
+    # TODO...
+    regex = Regex.compile!(@set_regex)
+
+    case Regex.run(regex, input) do
+      [_, key, "", value, ""] ->
+        parse_set_value(key, value)
+
+      [_, "", key, value, ""] ->
+        parse_set_value(key, value)
+
+      [_, key, "", "", value] ->
+        parse_set_value(key, value)
+
+      [_, "", key, "", value] ->
+        parse_set_value(key, value)
+
+      [_, key, "", value] ->
+        parse_set_value(key, value)
+
+      _ ->
+        {:error, "SET <key> <value> - Syntax error"}
     end
   end
 
   defp parse_command(input, "GET") do
-    case Regex.run(~r/^GET\s+(['"]?)([\w\s]+)\1$/, input) do
+    # TODO...
+    regex = Regex.compile!(@get_regex)
+
+    case Regex.run(regex, input) do
       [_, _, key] -> {:ok, {:get, key}}
       _ -> {:error, "GET <key> - Syntax error"}
     end
@@ -76,14 +103,39 @@ defmodule Tigela.Input.Parser do
     {:error, "No command #{command}. #{most_similar_message}"}
   end
 
-  defp parse_value(value) do
-    cond do
-      value == "TRUE" -> true
-      value == "FALSE" -> false
-      Regex.match?(~r/^\d+$/, value) -> String.to_integer(value)
-      true -> value
-    end
+  defp parse_set_value(key, value) do
+    parsed_value =
+      case value do
+        "TRUE" ->
+          true
+
+        "FALSE" ->
+          false
+
+        value when is_binary(value) ->
+          case Integer.parse(value) do
+            {int_value, ""} ->
+              int_value
+
+            _ ->
+              case Float.parse(value) do
+                {float_value, ""} -> float_value
+                _ -> value
+              end
+          end
+      end
+
+    {:ok, {:set, key, parsed_value}}
   end
+
+  # defp parse_value(value) do
+  #   cond do
+  #     value == "TRUE" -> true
+  #     value == "FALSE" -> false
+  #     Regex.match?(~r/^\d+$/, value) -> String.to_integer(value)
+  #     true -> value
+  #   end
+  # end
 
   @spec most_similar_command(String.t()) :: String.t() | nil
   defp most_similar_command(input) do
