@@ -1,4 +1,4 @@
-defmodule Tigela.Transaction do
+defmodule Tigela.Data.Transaction do
   @moduledoc """
   Implements an in-memory transaction system.
 
@@ -7,7 +7,7 @@ defmodule Tigela.Transaction do
 
   ## Examples
 
-      iex> Tigela.Transaction.start()
+      iex> Tigela.Data.Transaction.start()
       :ok
   """
 
@@ -23,13 +23,13 @@ defmodule Tigela.Transaction do
 
   ## Examples
 
-      iex> Tigela.Transaction.start()
+      iex> Tigela.Data.Transaction.start()
       :ok
   """
   @spec start() :: :ok
   def start() do
     Agent.start_link(
-      fn -> %Tigela.Transaction{} end,
+      fn -> %Tigela.Data.Transaction{} end,
       name: __MODULE__
     )
 
@@ -41,9 +41,9 @@ defmodule Tigela.Transaction do
 
   ## Examples
 
-      iex> Tigela.Transaction.start()
+      iex> Tigela.Data.Transaction.start()
       :ok
-      iex> Tigela.Transaction.begin()
+      iex> Tigela.Data.Transaction.begin()
       :ok
   """
   @spec begin() :: :ok
@@ -51,7 +51,7 @@ defmodule Tigela.Transaction do
     update_state(fn state ->
       level = state.level + 1
       transactions = [%{} | state.stack]
-      %Tigela.Transaction{state | level: level, stack: transactions}
+      %Tigela.Data.Transaction{state | level: level, stack: transactions}
     end)
   end
 
@@ -59,13 +59,13 @@ defmodule Tigela.Transaction do
   ## Examples
   Rolls back a transaction, deleting all its data.
 
-      iex> Tigela.Transaction.start()
+      iex> Tigela.Data.Transaction.start()
       :ok
-      iex> Tigela.Transaction.rollback()
+      iex> Tigela.Data.Transaction.rollback()
       {:error, "No active transaction"}
-      iex> Tigela.Transaction.begin()
+      iex> Tigela.Data.Transaction.begin()
       :ok
-      iex> Tigela.Transaction.rollback()
+      iex> Tigela.Data.Transaction.rollback()
       :ok
   """
   @spec rollback() :: :ok | {:error, String.t()}
@@ -82,17 +82,17 @@ defmodule Tigela.Transaction do
 
   ## Examples
 
-      iex> Tigela.Transaction.start()
+      iex> Tigela.Data.Transaction.start()
       :ok
-      iex> Tigela.Transaction.commit()
+      iex> Tigela.Data.Transaction.commit()
       {:error, "No active transaction"}
-      iex> Tigela.Transaction.begin()
+      iex> Tigela.Data.Transaction.begin()
       :ok
-      iex> Tigela.Transaction.begin()
+      iex> Tigela.Data.Transaction.begin()
       :ok
-      iex> Tigela.Transaction.commit()
+      iex> Tigela.Data.Transaction.commit()
       {:ok, nil}
-      iex> Tigela.Transaction.commit()
+      iex> Tigela.Data.Transaction.commit()
       {:ok, %{}}
   """
   @spec commit() :: {:ok, map() | nil} | {:error, String.t()}
@@ -127,7 +127,7 @@ defmodule Tigela.Transaction do
 
       merged_transaction = Map.merge(previous_transaction, last_transaction)
 
-      %Tigela.Transaction{
+      %Tigela.Data.Transaction{
         state
         | level: state.level - 1,
           stack: [merged_transaction | transactions]
@@ -140,21 +140,21 @@ defmodule Tigela.Transaction do
 
   ## Examples
 
-      iex> Tigela.Transaction.start()
+      iex> Tigela.Data.Transaction.start()
       :ok
-      iex> Tigela.Transaction.level()
+      iex> Tigela.Data.Transaction.level()
       0
-      iex> Tigela.Transaction.begin()
+      iex> Tigela.Data.Transaction.begin()
       :ok
-      iex> Tigela.Transaction.level()
+      iex> Tigela.Data.Transaction.level()
       1
-      iex> Tigela.Transaction.begin()
+      iex> Tigela.Data.Transaction.begin()
       :ok
-      iex> Tigela.Transaction.level()
+      iex> Tigela.Data.Transaction.level()
       2
-      iex> Tigela.Transaction.commit()
+      iex> Tigela.Data.Transaction.commit()
       {:ok, nil}
-      iex> Tigela.Transaction.level()
+      iex> Tigela.Data.Transaction.level()
       1
   """
   @spec level() :: integer()
@@ -167,15 +167,15 @@ defmodule Tigela.Transaction do
 
     ## Examples
 
-      iex> Tigela.Transaction.start()
+      iex> Tigela.Data.Transaction.start()
       :ok
-      iex> Tigela.Transaction.get("x")
+      iex> Tigela.Data.Transaction.get("x")
       nil
-      iex> Tigela.Transaction.begin()
+      iex> Tigela.Data.Transaction.begin()
       :ok
-      iex> Tigela.Transaction.set("x", "hello")
+      iex> Tigela.Data.Transaction.set("x", "hello")
       :ok
-      iex> Tigela.Transaction.get("x")
+      iex> Tigela.Data.Transaction.get("x")
       "hello"
   """
   @spec get(String.t()) :: String.t() | nil
@@ -210,13 +210,13 @@ defmodule Tigela.Transaction do
 
   ## Examples
 
-      iex> Tigela.Transaction.start()
+      iex> Tigela.Data.Transaction.start()
       :ok
-      iex> Tigela.Transaction.set("x", "hello")
+      iex> Tigela.Data.Transaction.set("x", "hello")
       {:error, "No active transaction"}
-      iex> Tigela.Transaction.begin()
+      iex> Tigela.Data.Transaction.begin()
       :ok
-      iex> Tigela.Transaction.set("x", "hello")
+      iex> Tigela.Data.Transaction.set("x", "hello")
       :ok
   """
   @spec set(String.t(), String.t()) :: :ok | {:error, String.t()}
@@ -230,7 +230,7 @@ defmodule Tigela.Transaction do
           updated_transactions =
             List.update_at(state.stack, 0, &Map.put(&1, key, value))
 
-          %Tigela.Transaction{state | stack: updated_transactions}
+          %Tigela.Data.Transaction{state | stack: updated_transactions}
         end)
 
         :ok
@@ -243,18 +243,18 @@ defmodule Tigela.Transaction do
     update_state(fn state ->
       new_level = state.level - 1
       new_transactions = tl(state.stack)
-      %Tigela.Transaction{state | level: new_level, stack: new_transactions}
+      %Tigela.Data.Transaction{state | level: new_level, stack: new_transactions}
     end)
   end
 
   @doc false
-  @spec update_state((%Tigela.Transaction{} -> %Tigela.Transaction{})) :: :ok
+  @spec update_state((%Tigela.Data.Transaction{} -> %Tigela.Data.Transaction{})) :: :ok
   defp update_state(fun) do
     Agent.update(__MODULE__, fun)
   end
 
   @doc false
-  @spec get_state((%Tigela.Transaction{} -> a)) :: a when a: var
+  @spec get_state((%Tigela.Data.Transaction{} -> a)) :: a when a: var
   defp get_state(fun) do
     Agent.get(__MODULE__, fun)
   end

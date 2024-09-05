@@ -1,4 +1,13 @@
-defmodule Tigela.Persistent do
+defmodule Tigela.Data.Persistent do
+  @moduledoc """
+  Persists key/value data in files.
+
+  ## Examples
+
+      iex> Tigela.Data.Transaction.start()
+      :ok
+  """
+
   @data_dir "./tmp/tigela_db/data"
 
   @write_file_error "Failed to write file"
@@ -9,7 +18,7 @@ defmodule Tigela.Persistent do
 
   ## Examples
 
-      iex> Tigela.Persistent.start()
+      iex> Tigela.Data.Persistent.start()
       :ok
   """
   @spec start() :: :ok
@@ -24,13 +33,13 @@ defmodule Tigela.Persistent do
 
   ## Examples
 
-      iex> Tigela.Persistent.start()
+      iex> Tigela.Data.Persistent.start()
       :ok
-      iex> Tigela.Persistent.get("x")
+      iex> Tigela.Data.Persistent.get("x")
       nil
-      iex> Tigela.Persistent.set("x", "20")
+      iex> Tigela.Data.Persistent.set("x", "20")
       :ok
-      iex> Tigela.Persistent.get("x")
+      iex> Tigela.Data.Persistent.get("x")
       "20"
   """
   @spec get(String.t()) :: String.t() | nil
@@ -46,11 +55,11 @@ defmodule Tigela.Persistent do
 
   ## Examples
 
-      iex> Tigela.Persistent.start()
+      iex> Tigela.Data.Persistent.start()
       :ok
-      iex> Tigela.Persistent.set("x", "20")
+      iex> Tigela.Data.Persistent.set("x", "20")
       :ok
-      iex> Tigela.Persistent.set("x", "10")
+      iex> Tigela.Data.Persistent.set("x", "10")
       :ok
   """
   @spec set(String.t(), String.t()) :: :ok | {:error, String.t()}
@@ -66,11 +75,11 @@ defmodule Tigela.Persistent do
 
   ## Examples
 
-      iex> Tigela.Persistent.start()
+      iex> Tigela.Data.Persistent.start()
       :ok
-      iex> Tigela.Persistent.set("x", "20")
+      iex> Tigela.Data.Persistent.set("x", "20")
       :ok
-      iex> Tigela.Persistent.delete("x")
+      iex> Tigela.Data.Persistent.delete("x")
       :ok
   """
   @spec delete(String.t()) :: :ok | {:error, String.t()}
