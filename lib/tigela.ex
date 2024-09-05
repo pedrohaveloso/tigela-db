@@ -1,58 +1,77 @@
 defmodule Tigela do
-  def main(_args) do
-    Tigela.Transaction.start()
-    Tigela.Persistent.start()
+  def main(_) do
+    parse("SET 'x x' \"name world\"")
+    |> IO.inspect()
 
-    Tigela.Transaction.begin()
-    Tigela.Transaction.set("x", "10")
-    Tigela.Transaction.set("y", "10")
-    Tigela.Transaction.begin()
-    Tigela.Transaction.set("x", "20")
-    Tigela.Transaction.get("x") |> IO.puts()
-    Tigela.Transaction.commit()
-    Tigela.Transaction.commit() |> IO.inspect()
-    Tigela.Transaction.get("x") |> IO.puts()
+    parse("SET 'x x' name")
+    |> IO.inspect()
 
-    Tigela.Persistent.set("x", "10")
-    Tigela.Persistent.delete("x") |> IO.inspect()
+    parse("SET 'x' \"name world\"")
+    |> IO.inspect()
 
-    # program()
+    parse("SET x 10")
+    |> IO.inspect()
+
+    parse("SET z TRUE")
+    |> IO.inspect()
+
+    parse("SET x x x x x FALSE")
+    |> IO.inspect()
   end
 
-  # @prompt ">"
+  @set_command_regex ~r/^SET\s+(?:'([^']+)'|(\S+))\s+(?:"([^"]+)"|(\d+(?:\.\d+)?|TRUE|FALSE|\S+))$/
 
-  # @set_command "SET"
-  # @set_syntax "#{@set_command} <key> <value>"
+  def parse(input) do
+    case Regex.run(@set_command_regex, input) do
+      [_, key, "", value, ""] ->
+        parse_value(key, value)
 
-  # @get_command "GET"
-  # @get_syntax "#{@get_command} <key>"
+      [_, "", key, value, ""] ->
+        parse_value(key, value)
 
-  # @begin_command "BEGIN"
-  # @begin_syntax "#{@begin_command}"
+      [_, key, "", "", value] ->
+        parse_value(key, value)
 
-  # @rollback_command "ROLLBACK"
-  # @rollback_syntax "#{@rollback_command}"
+      [_, "", key, "", value] ->
+        parse_value(key, value)
 
-  # @commit_command "COMMIT"
-  # @commit_syntax "#{@commit_command}"
+      [_, key, "", value] ->
+        parse_value(key, value)
 
-  def program() do
-    # ...
+      value ->
+        IO.inspect(value)
+        # IO.puts(a)
+        # IO.puts(b)
+        # IO.puts(c)
+        # IO.puts(d)
+        # IO.puts(e)
 
-    program()
+        {:error, "invalid"}
+    end
   end
 
-  @spec get(String.t()) :: String.t()
-  def get(key) do
-    value =
-      if Tigela.Transaction.level() > 0 do
-        Tigela.Transaction.get(key)
+  defp parse_value(key, value) do
+    parsed_value =
+      case value do
+        "TRUE" ->
+          true
+
+        "FALSE" ->
+          false
+
+        value when is_binary(value) ->
+          case Integer.parse(value) do
+            {int_value, ""} ->
+              int_value
+
+            _ ->
+              case Float.parse(value) do
+                {float_value, ""} -> float_value
+                _ -> value
+              end
+          end
       end
 
-    if is_nil(value) do
-      Tigela.Persistent.get(key)
-    else
-      value
-    end
+    {:ok, key, parsed_value}
   end
 end

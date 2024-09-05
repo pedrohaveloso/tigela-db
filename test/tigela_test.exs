@@ -8,4 +8,5 @@ defmodule TigelaTest do
 
   doctest Tigela.Data.Transaction
   doctest Tigela.Data.Persistent
+  doctest Tigela.Input.Parser
 end

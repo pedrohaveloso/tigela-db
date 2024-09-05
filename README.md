@@ -31,7 +31,7 @@ $ ./tigela
 
 # Funcionalidades
 
-O TigelaDB possui cinco comandos, sendo eles: `SET`,`GET`, `BEGIN`, `ROLLBACK` e `COMMIT`. Veja, abaixo, uma definição mais apropriada e detalhada de cada comando disponível.
+O TigelaDB possui cinco comandos, sendo eles: `SET`, `GET`, `BEGIN`, `ROLLBACK` e `COMMIT`. Veja, abaixo, uma definição mais apropriada e detalhada de cada comando disponível.
 
 ## SET
 
@@ -39,10 +39,10 @@ Insere ou modifica o valor de uma chave no banco. A chave e o valor são persist
 
 **Sintaxe**: `SET` \<key\> \<value\>
 
-- Onde \<key\> deve ser uma sequência de caracteres ou dígitos, podendo conter espaços caso sejam envolvidos entre aspas simples (').
+- Onde \<key\> deve ser uma sequência de caracteres ou dígitos, podendo conter espaços caso seja envolvido entre aspas simples (').
 - Onde \<value\> pode ser um valor numérico, um valor booleano (TRUE ou FALSE) ou um texto, sendo o texto qualquer outro valor sem espaços, podendo conter espaços ao ser envolvido entre aspas duplas (").
 
-Após executado, uma saída ocorre, contendo um valor booleano (TRUE ou FALSE), que representa se a chave já existia anteriormente, e o valor inserido.
+Após executado, uma saída ocorre, contendo um valor booleano (TRUE ou FALSE) que representa se a chave já existia anteriormente, e o valor inserido.
 
 Exemplos:
 
