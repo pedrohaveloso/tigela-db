@@ -6,6 +6,6 @@ defmodule TigelaTest do
     :ok
   end
 
-  doctest Tigela.Transaction
-  doctest Tigela.Persistent
+  doctest Tigela.Data.Transaction
+  doctest Tigela.Data.Persistent
 end
