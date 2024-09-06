@@ -8,10 +8,9 @@ defmodule Tigela.Data.Persistent do
       :ok
   """
 
-  @data_dir "./tmp/tigela_db/data"
-
-  @write_file_error "Failed to write file"
-  @delete_file_error "Failed to delete file"
+  @data_dir "./tmp/tigela_db"
+  @data_file "./tmp/tigela_db/data.tdb"
+  @data_file_regex ~r/^\[([^\]]+)\]([^\[]+)\[==λ==\](.+)$/
 
   @doc """
   Performs operations necessary for data persistence to work.
@@ -23,7 +22,7 @@ defmodule Tigela.Data.Persistent do
   """
   @spec start() :: :ok
   def start() do
-    File.mkdir_p!(@data_dir)
+    File.mkdir_p(@data_dir)
 
     :ok
   end
@@ -37,16 +36,20 @@ defmodule Tigela.Data.Persistent do
       :ok
       iex> Tigela.Data.Persistent.get("x")
       nil
-      iex> Tigela.Data.Persistent.set("x", "20")
+      iex> Tigela.Data.Persistent.set(%Tigela.Data{key: "x", type: "string", value: "foo"})
       :ok
       iex> Tigela.Data.Persistent.get("x")
-      "20"
+      %Tigela.Data{key: "x", type: "string", value: "foo"}
   """
-  @spec get(String.t()) :: String.t() | nil
+  @spec get(String.t()) :: Tigela.Data.t() | nil
   def get(key) when is_binary(key) do
-    case File.read(file_path(key)) do
-      {:ok, content} -> content
-      {:error, _} -> nil
+    data =
+      read_data_file()
+      |> Map.get(key, nil)
+
+    case data do
+      nil -> nil
+      _ -> %Tigela.Data{key: key, type: data["type"], value: data["value"]}
     end
   end
 
@@ -57,17 +60,34 @@ defmodule Tigela.Data.Persistent do
 
       iex> Tigela.Data.Persistent.start()
       :ok
-      iex> Tigela.Data.Persistent.set("x", "20")
-      :ok
-      iex> Tigela.Data.Persistent.set("x", "10")
+      iex> Tigela.Data.Persistent.set(%Tigela.Data{key: "x", type: "string", value: "foo"})
       :ok
   """
-  @spec set(String.t(), String.t()) :: :ok | {:error, String.t()}
-  def set(key, value) when is_binary(key) and is_binary(value) do
-    case File.write(file_path(key), value) do
-      :ok -> :ok
-      {:error, _} -> {:error, @write_file_error}
-    end
+  @spec set(Tigela.Data.t()) :: :ok | {:error, atom()}
+  def set(data) do
+    read_data_file()
+    |> Map.put(data.key, %{"type" => data.type, "value" => data.value})
+    |> write_data_file()
+  end
+
+  @doc """
+  Informs whether a key exists.
+
+  ## Examples
+
+      iex> Tigela.Data.Persistent.start()
+      :ok
+      iex> Tigela.Data.Persistent.exists?("x")
+      false
+      iex> Tigela.Data.Persistent.set(%Tigela.Data{key: "x", type: "string", value: "foo"})
+      :ok
+      iex> Tigela.Data.Persistent.exists?("x")
+      true
+  """
+  @spec exists?(String.t()) :: boolean()
+  def exists?(key) when is_binary(key) do
+    read_data_file()
+    |> Map.has_key?(key)
   end
 
   @doc """
@@ -77,20 +97,49 @@ defmodule Tigela.Data.Persistent do
 
       iex> Tigela.Data.Persistent.start()
       :ok
-      iex> Tigela.Data.Persistent.set("x", "20")
+      iex> Tigela.Data.Persistent.set(%Tigela.Data{key: "x", type: "string", value: "foo"})
       :ok
       iex> Tigela.Data.Persistent.delete("x")
       :ok
   """
-  @spec delete(String.t()) :: :ok | {:error, String.t()}
+  @spec delete(String.t()) :: :ok
   def delete(key) when is_binary(key) do
-    case File.rm(file_path(key)) do
-      :ok -> :ok
-      {:error, _} -> {:error, @delete_file_error}
+    read_data_file()
+    |> Map.delete(key)
+    |> write_data_file()
+
+    :ok
+  end
+
+  @doc false
+  @spec read_data_file() :: map()
+  defp read_data_file() do
+    with {:ok, content} <- File.read(@data_file) do
+      content
+      |> String.split("\n", trim: true)
+      |> Enum.reduce(%{}, fn line, acc ->
+        case Regex.run(@data_file_regex, line) do
+          [_, type, key, value] ->
+            Map.put(acc, key, %{"type" => type, "value" => value})
+
+          _ ->
+            acc
+        end
+      end)
+    else
+      _ -> %{}
     end
   end
 
   @doc false
-  @spec file_path(String.t()) :: String.t()
-  defp file_path(key), do: "#{@data_dir}/#{key}"
+  @spec write_data_file(map()) :: :ok | {:error, atom()}
+  defp write_data_file(content) do
+    File.write(
+      @data_file,
+      Enum.map(content, fn {key, %{"type" => type, "value" => value}} ->
+        "[#{type}]#{key}[==λ==]#{value}"
+      end)
+      |> Enum.join("\n")
+    )
+  end
 end
