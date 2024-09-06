@@ -2,7 +2,7 @@ defmodule Tigela.Input.Parser do
   @commands ["BEGIN", "COMMIT", "ROLLBACK", "GET", "SET"]
 
   @key_regex "(?:'((?:\\\\'|[^'])*)'|(\\S+))"
-  @value_regex "(?:\"((?:\\\"|[^\"])+)\"|(\\d+(?:\\.\\d+)?|TRUE|FALSE|\\S+))"
+  @value_regex "(?:(\"(?:\\\"|[^\"])+\")|(\\d+(?:\\.\\d+)?|TRUE|FALSE|\\S+))"
 
   @get_regex "^GET\\s+#{@key_regex}$"
   @set_regex "^SET\\s+#{@key_regex}\\s+#{@value_regex}$"
@@ -14,7 +14,7 @@ defmodule Tigela.Input.Parser do
       iex> Tigela.Input.Parser.command("SETA x 10")
       {:error, "No command SETA. Did you mean SET?"}
       iex> Tigela.Input.Parser.command("SET x 10")
-      {:ok, {:set, "x", 10}}
+      {:ok, {:set, %Tigela.Data{key: "x", type: "integer", value: "10"}}}
       iex> Tigela.Input.Parser.command("SET x x 10")
       {:error, "SET <key> <value> - Syntax error"}
       iex> Tigela.Input.Parser.command("GET x")
@@ -26,6 +26,9 @@ defmodule Tigela.Input.Parser do
       iex> Tigela.Input.Parser.command("COMMIT")
       {:ok, {:commit}}
   """
+  @spec command(binary()) ::
+          {:error, String.t()}
+          | {:ok, {atom()} | {:get, String.t()} | {:set, Tigela.Data.t()}}
   def command(input) when is_binary(input) do
     input = String.trim(input)
 
@@ -34,53 +37,36 @@ defmodule Tigela.Input.Parser do
       |> String.split(" ")
       |> List.first()
 
-    case Enum.member?(@commands, command) do
-      true -> parse_command(input, command)
-      _ -> no_command(command)
-    end
+    if Enum.member?(@commands, command),
+      do: parse_command(input, command),
+      else: no_command(command)
   end
 
   defp parse_command(input, "SET") do
-    # TODO...
-    regex = Regex.compile!(@set_regex)
-
-    case Regex.run(regex, input) do
-      [_, key, "", value, ""] ->
-        parse_set_value(key, value)
-
-      [_, "", key, value, ""] ->
-        parse_set_value(key, value)
-
-      [_, key, "", "", value] ->
-        parse_set_value(key, value)
-
-      [_, "", key, "", value] ->
-        parse_set_value(key, value)
-
-      [_, key, "", value] ->
-        parse_set_value(key, value)
-
-      [_, "", key, value] ->
-        parse_set_value(key, value)
-
-      _ ->
-        {:error, "SET <key> <value> - Syntax error"}
+    @set_regex
+    |> Regex.compile!()
+    |> Regex.run(input)
+    # TODO: improve this case.
+    |> case do
+      [_, key, "", value, ""] -> parse_set_value(key, value)
+      [_, "", key, value, ""] -> parse_set_value(key, value)
+      [_, key, "", "", value] -> parse_set_value(key, value)
+      [_, "", key, "", value] -> parse_set_value(key, value)
+      [_, key, "", value] -> parse_set_value(key, value)
+      [_, "", key, value] -> parse_set_value(key, value)
+      _ -> {:error, "SET <key> <value> - Syntax error"}
     end
   end
 
   defp parse_command(input, "GET") do
-    # TODO...
-    regex = Regex.compile!(@get_regex)
-
-    case Regex.run(regex, input) do
-      [_, key] ->
-        {:ok, {:get, key}}
-
-      [_, _, key] ->
-        {:ok, {:get, key}}
-
-      _ ->
-        {:error, "GET <key> - Syntax error"}
+    @get_regex
+    |> Regex.compile!()
+    |> Regex.run(input)
+    # TODO: improve this case.
+    |> case do
+      [_, key] -> {:ok, {:get, key}}
+      [_, _, key] -> {:ok, {:get, key}}
+      _ -> {:error, "GET <key> - Syntax error"}
     end
   end
 
@@ -106,29 +92,20 @@ defmodule Tigela.Input.Parser do
     {:error, "No command #{command}. #{most_similar_message}"}
   end
 
+  @spec parse_set_value(String.t(), String.t()) ::
+          {:ok, {atom(), Tigela.Data.t()}} | {:error, String.t()}
+  defp parse_set_value(_, "NIL"), do: {:error, "NIL value cannot be entered"}
+
   defp parse_set_value(key, value) do
-    parsed_value =
-      case value do
-        "TRUE" ->
-          true
-
-        "FALSE" ->
-          false
-
-        value when is_binary(value) ->
-          case Integer.parse(value) do
-            {int_value, ""} ->
-              int_value
-
-            _ ->
-              case Float.parse(value) do
-                {float_value, ""} -> float_value
-                _ -> value
-              end
-          end
+    type =
+      cond do
+        value == "TRUE" or value == "FALSE" -> "boolean"
+        Integer.parse(value) != :error -> "integer"
+        Float.parse(value) != :error -> "float"
+        true -> "string"
       end
 
-    {:ok, {:set, key, parsed_value}}
+    {:ok, {:set, %Tigela.Data{key: key, type: type, value: value}}}
   end
 
   @spec most_similar_command(String.t()) :: String.t() | nil
