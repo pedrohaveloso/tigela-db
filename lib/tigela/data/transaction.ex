@@ -173,12 +173,12 @@ defmodule Tigela.Data.Transaction do
       nil
       iex> Tigela.Data.Transaction.begin()
       :ok
-      iex> Tigela.Data.Transaction.set("x", "hello")
+      iex> Tigela.Data.Transaction.set(%Tigela.Data{key: "x", type: "string", value: "foo"})
       :ok
       iex> Tigela.Data.Transaction.get("x")
-      "hello"
+      %Tigela.Data{key: "x", type: "string", value: "foo"}
   """
-  @spec get(String.t()) :: String.t() | nil
+  @spec get(String.t()) :: Tigela.Data.t() | nil
   def get(key) when is_binary(key) do
     level = level()
 
@@ -189,19 +189,24 @@ defmodule Tigela.Data.Transaction do
   end
 
   @doc false
-  @spec get(integer(), integer(), String.t()) :: String.t() | nil
+  @spec get(integer(), integer(), String.t()) :: Tigela.Data.t() | nil
   defp get(level, index, key) do
-    value =
+    data =
       get_state(fn state ->
         state.stack
         |> Enum.at(index, %{})
         |> Map.get(key)
       end)
 
-    if index >= level - 1 || !is_nil(value) do
-      value
-    else
-      get(level, index + 1, key)
+    cond do
+      !is_nil(data) ->
+        %Tigela.Data{key: key, type: data["type"], value: data["value"]}
+
+      index < level - 1 ->
+        nil
+
+      true ->
+        get(level, index + 1, key)
     end
   end
 
@@ -212,15 +217,17 @@ defmodule Tigela.Data.Transaction do
 
       iex> Tigela.Data.Transaction.start()
       :ok
-      iex> Tigela.Data.Transaction.set("x", "hello")
+      iex> data = %Tigela.Data{key: "x", type: "string", value: "foo"}
+      %Tigela.Data{key: "x", type: "string", value: "foo"}
+      iex> Tigela.Data.Transaction.set(data)
       {:error, "No active transaction"}
       iex> Tigela.Data.Transaction.begin()
       :ok
-      iex> Tigela.Data.Transaction.set("x", "hello")
+      iex> Tigela.Data.Transaction.set(data)
       :ok
   """
-  @spec set(String.t(), String.t()) :: :ok | {:error, String.t()}
-  def set(key, value) when is_binary(key) and is_binary(value) do
+  @spec set(Tigela.Data.t()) :: :ok | {:error, String.t()}
+  def set(data) do
     case level() do
       0 ->
         {:error, @no_active_transaction_error}
@@ -228,12 +235,60 @@ defmodule Tigela.Data.Transaction do
       _ ->
         update_state(fn state ->
           updated_transactions =
-            List.update_at(state.stack, 0, &Map.put(&1, key, value))
+            List.update_at(
+              state.stack,
+              0,
+              &Map.put(&1, data.key, %{
+                "type" => data.type,
+                "value" => data.value
+              })
+            )
 
           %Tigela.Data.Transaction{state | stack: updated_transactions}
         end)
 
         :ok
+    end
+  end
+
+  @doc """
+  Informs whether a key exists in the transaction.
+
+  ## Examples
+
+      iex> Tigela.Data.Transaction.start()
+      :ok
+      iex> Tigela.Data.Transaction.begin()
+      :ok
+      iex> Tigela.Data.Transaction.exists?("x")
+      false
+      iex> Tigela.Data.Transaction.set(%Tigela.Data{key: "x", type: "string", value: "foo"})
+      :ok
+      iex> Tigela.Data.Transaction.exists?("x")
+      true
+  """
+  @spec exists?(String.t()) :: boolean()
+  def exists?(key) do
+    case level() do
+      0 ->
+        false
+
+      _ ->
+        get_state(fn state ->
+          recursive_has_key?(state.stack, key)
+        end)
+    end
+  end
+
+  @spec recursive_has_key?(list(), String.t()) :: boolean()
+  defp recursive_has_key?(stack, key) do
+    if stack == [] do
+      false
+    else
+      stack
+      |> hd()
+      |> Map.has_key?(key)
+      |> if(do: true, else: recursive_has_key?(tl(stack), key))
     end
   end
 
@@ -248,6 +303,14 @@ defmodule Tigela.Data.Transaction do
   end
 
   @doc false
+  @spec get_current_transaction() :: map()
+  defp get_current_transaction() do
+    get_state(fn state ->
+      List.first(state.stack, %{})
+    end)
+  end
+
+  @doc false
   @spec update_state((%Tigela.Data.Transaction{} -> %Tigela.Data.Transaction{})) :: :ok
   defp update_state(fun) do
     Agent.update(__MODULE__, fun)
@@ -257,13 +320,5 @@ defmodule Tigela.Data.Transaction do
   @spec get_state((%Tigela.Data.Transaction{} -> a)) :: a when a: var
   defp get_state(fun) do
     Agent.get(__MODULE__, fun)
-  end
-
-  @doc false
-  @spec get_current_transaction() :: map()
-  defp get_current_transaction() do
-    get_state(fn state ->
-      List.first(state.stack, %{})
-    end)
   end
 end
