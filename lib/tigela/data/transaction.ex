@@ -202,7 +202,7 @@ defmodule Tigela.Data.Transaction do
       !is_nil(data) ->
         %Tigela.Data{key: key, type: data["type"], value: data["value"]}
 
-      index < level - 1 ->
+      index >= level - 1 ->
         nil
 
       true ->
