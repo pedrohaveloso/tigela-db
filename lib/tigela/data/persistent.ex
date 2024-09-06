@@ -65,9 +65,18 @@ defmodule Tigela.Data.Persistent do
   """
   @spec set(Tigela.Data.t()) :: :ok | {:error, atom()}
   def set(data) do
+    data = filter_set_data(data)
+
     read_data_file()
     |> Map.put(data.key, %{"type" => data.type, "value" => data.value})
     |> write_data_file()
+  end
+
+  @spec set(Tigela.Data.t()) :: Tigela.Data.t()
+  defp filter_set_data(data) do
+    data
+    |> Map.put(:key, String.replace(data.key, "[==λ==]", "?"))
+    |> Map.put(:value, String.replace(data.value, "[==λ==]", "?"))
   end
 
   @doc """
