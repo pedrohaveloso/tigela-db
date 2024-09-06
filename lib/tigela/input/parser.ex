@@ -1,4 +1,9 @@
 defmodule Tigela.Input.Parser do
+  @moduledoc """
+  It analyses and parses input commands, converting them into internal
+  structures.
+  """
+
   @commands ["BEGIN", "COMMIT", "ROLLBACK", "GET", "SET"]
 
   @key_regex "(?:'((?:\\\\'|[^'])*)'|(\\S+))"
@@ -8,6 +13,7 @@ defmodule Tigela.Input.Parser do
   @set_regex "^SET\\s+#{@key_regex}\\s+#{@value_regex}$"
 
   @doc """
+  Analyses and interprets an input command.
 
   ## Examples
 
@@ -42,11 +48,11 @@ defmodule Tigela.Input.Parser do
       else: no_command(command)
   end
 
+  @spec parse_command(String.t(), String.t()) :: tuple()
   defp parse_command(input, "SET") do
     @set_regex
     |> Regex.compile!()
     |> Regex.run(input)
-    # TODO: improve this case.
     |> case do
       [_, key, "", value, ""] -> parse_set_value(key, value)
       [_, "", key, value, ""] -> parse_set_value(key, value)
@@ -62,7 +68,6 @@ defmodule Tigela.Input.Parser do
     @get_regex
     |> Regex.compile!()
     |> Regex.run(input)
-    # TODO: improve this case.
     |> case do
       [_, key] -> {:ok, {:get, key}}
       [_, _, key] -> {:ok, {:get, key}}
@@ -83,13 +88,17 @@ defmodule Tigela.Input.Parser do
     most_similar = command |> String.upcase() |> most_similar_command()
 
     most_similar_message =
-      if is_nil(most_similar) do
-        ""
-      else
-        "Did you mean #{most_similar}?"
-      end
+      if is_nil(most_similar), do: "", else: "Did you mean #{most_similar}?"
 
     {:error, "No command #{command}. #{most_similar_message}"}
+  end
+
+  @spec most_similar_command(String.t()) :: String.t() | nil
+  defp most_similar_command(input) do
+    @commands
+    |> Enum.map(fn cmd -> {cmd, String.jaro_distance(cmd, input)} end)
+    |> Enum.max_by(fn {_, distance} -> distance end)
+    |> then(fn {cmd, distance} -> if distance > 0.5, do: cmd, else: nil end)
   end
 
   @spec parse_set_value(String.t(), String.t()) ::
@@ -99,28 +108,12 @@ defmodule Tigela.Input.Parser do
   defp parse_set_value(key, value) do
     type =
       cond do
-        value == "TRUE" or value == "FALSE" -> "boolean"
-        Integer.parse(value) != :error -> "integer"
-        Float.parse(value) != :error -> "float"
+        value in ["TRUE", "FALSE"] -> "boolean"
+        match?({_, ""}, Integer.parse(value)) -> "integer"
+        match?({_, ""}, Float.parse(value)) -> "float"
         true -> "string"
       end
 
     {:ok, {:set, %Tigela.Data{key: key, type: type, value: value}}}
-  end
-
-  @spec most_similar_command(String.t()) :: String.t() | nil
-  defp most_similar_command(input) do
-    {command, distance} =
-      Enum.reduce(@commands, {nil, 0}, fn valid, {command, distance} ->
-        current_distance = String.jaro_distance(valid, input)
-
-        cond do
-          command == nil -> {valid, current_distance}
-          current_distance > distance -> {valid, current_distance}
-          true -> {command, distance}
-        end
-      end)
-
-    if distance > 0.5, do: command, else: nil
   end
 end
