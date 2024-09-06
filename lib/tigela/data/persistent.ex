@@ -10,7 +10,7 @@ defmodule Tigela.Data.Persistent do
 
   @data_dir "./tmp/tigela_db"
   @data_file "./tmp/tigela_db/data.tdb"
-  @data_file_regex ~r/^\[([^\]]+)\]([^\[]+)\[==λ==\](.+)$/
+  @data_file_regex ~r/^\[([^\]]+)\](.+)\[==λ==\](.+)$/
 
   @doc """
   Performs operations necessary for data persistence to work.
