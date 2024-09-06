@@ -7,7 +7,6 @@ defmodule Tigela.Input.Parser do
   @get_regex "^GET\\s+#{@key_regex}$"
   @set_regex "^SET\\s+#{@key_regex}\\s+#{@value_regex}$"
 
-  # @spec command(String.t()) :: any()
   @doc """
 
   ## Examples
@@ -34,14 +33,9 @@ defmodule Tigela.Input.Parser do
       input
       |> String.split(" ")
       |> List.first()
-      |> String.upcase()
 
-    case command do
-      "SET" -> parse_command(input, "SET")
-      "GET" -> parse_command(input, "GET")
-      "BEGIN" -> parse_command(input, "BEGIN")
-      "COMMIT" -> parse_command(input, "COMMIT")
-      "ROLLBACK" -> parse_command(input, "ROLLBACK")
+    case Enum.member?(@commands, command) do
+      true -> parse_command(input, command)
       _ -> no_command(command)
     end
   end
@@ -66,6 +60,9 @@ defmodule Tigela.Input.Parser do
       [_, key, "", value] ->
         parse_set_value(key, value)
 
+      [_, "", key, value] ->
+        parse_set_value(key, value)
+
       _ ->
         {:error, "SET <key> <value> - Syntax error"}
     end
@@ -76,8 +73,14 @@ defmodule Tigela.Input.Parser do
     regex = Regex.compile!(@get_regex)
 
     case Regex.run(regex, input) do
-      [_, _, key] -> {:ok, {:get, key}}
-      _ -> {:error, "GET <key> - Syntax error"}
+      [_, key] ->
+        {:ok, {:get, key}}
+
+      [_, _, key] ->
+        {:ok, {:get, key}}
+
+      _ ->
+        {:error, "GET <key> - Syntax error"}
     end
   end
 
@@ -91,7 +94,7 @@ defmodule Tigela.Input.Parser do
 
   @spec no_command(String.t()) :: {:error, String.t()}
   defp no_command(command) do
-    most_similar = most_similar_command(command)
+    most_similar = command |> String.upcase() |> most_similar_command()
 
     most_similar_message =
       if is_nil(most_similar) do
@@ -127,15 +130,6 @@ defmodule Tigela.Input.Parser do
 
     {:ok, {:set, key, parsed_value}}
   end
-
-  # defp parse_value(value) do
-  #   cond do
-  #     value == "TRUE" -> true
-  #     value == "FALSE" -> false
-  #     Regex.match?(~r/^\d+$/, value) -> String.to_integer(value)
-  #     true -> value
-  #   end
-  # end
 
   @spec most_similar_command(String.t()) :: String.t() | nil
   defp most_similar_command(input) do
