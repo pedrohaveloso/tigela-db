@@ -15,13 +15,13 @@ defmodule Tigela.Processor do
       iex> Tigela.Processor.run_command({:set, data})
       {:ok, "FALSE foo"}
   """
-  @spec run_command(tuple()) :: {:error, String.t()} | {:ok, any()}
+  @spec run_command(tuple()) :: {:ok | :error, String.t()}
   def run_command({:set, %Data.Model{key: key, type: type, value: value}}) do
     exists =
       if Data.Transaction.level() > 0 do
-        exists = Data.Transaction.exists?(key)
+        exists = Data.Transaction.exists?(key) || Data.Persistent.exists?(key)
         Data.Transaction.set(%Data.Model{key: key, type: type, value: value})
-        if exists, do: true, else: Data.Persistent.exists?(key)
+        exists
       else
         exists = Data.Persistent.exists?(key)
         Data.Persistent.set(%Data.Model{key: key, type: type, value: value})
@@ -34,7 +34,7 @@ defmodule Tigela.Processor do
   def run_command({:get, key}) do
     data =
       if Data.Transaction.level() > 0 do
-        Data.Transaction.get(key)
+        Data.Transaction.get(key) || Data.Persistent.get(key)
       else
         Data.Persistent.get(key)
       end
