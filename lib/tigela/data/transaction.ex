@@ -173,12 +173,12 @@ defmodule Tigela.Data.Transaction do
       nil
       iex> Tigela.Data.Transaction.begin()
       :ok
-      iex> Tigela.Data.Transaction.set(%Tigela.Data{key: "x", type: "string", value: "foo"})
+      iex> Tigela.Data.Transaction.set(%Tigela.Data.Model{key: "x", type: "string", value: "foo"})
       :ok
       iex> Tigela.Data.Transaction.get("x")
-      %Tigela.Data{key: "x", type: "string", value: "foo"}
+      %Tigela.Data.Model{key: "x", type: "string", value: "foo"}
   """
-  @spec get(String.t()) :: Tigela.Data.t() | nil
+  @spec get(String.t()) :: Tigela.Data.Model.t() | nil
   def get(key) when is_binary(key) do
     level = level()
 
@@ -189,7 +189,7 @@ defmodule Tigela.Data.Transaction do
   end
 
   @doc false
-  @spec get(integer(), integer(), String.t()) :: Tigela.Data.t() | nil
+  @spec get(integer(), integer(), String.t()) :: Tigela.Data.Model.t() | nil
   defp get(level, index, key) do
     data =
       get_state(fn state ->
@@ -200,7 +200,7 @@ defmodule Tigela.Data.Transaction do
 
     cond do
       !is_nil(data) ->
-        %Tigela.Data{key: key, type: data["type"], value: data["value"]}
+        %Tigela.Data.Model{key: key, type: data["type"], value: data["value"]}
 
       index >= level - 1 ->
         nil
@@ -217,8 +217,8 @@ defmodule Tigela.Data.Transaction do
 
       iex> Tigela.Data.Transaction.start()
       :ok
-      iex> data = %Tigela.Data{key: "x", type: "string", value: "foo"}
-      %Tigela.Data{key: "x", type: "string", value: "foo"}
+      iex> data = %Tigela.Data.Model{key: "x", type: "string", value: "foo"}
+      %Tigela.Data.Model{key: "x", type: "string", value: "foo"}
       iex> Tigela.Data.Transaction.set(data)
       {:error, "No active transaction"}
       iex> Tigela.Data.Transaction.begin()
@@ -226,7 +226,7 @@ defmodule Tigela.Data.Transaction do
       iex> Tigela.Data.Transaction.set(data)
       :ok
   """
-  @spec set(Tigela.Data.t()) :: :ok | {:error, String.t()}
+  @spec set(Tigela.Data.Model.t()) :: :ok | {:error, String.t()}
   def set(data) do
     case level() do
       0 ->
@@ -262,7 +262,7 @@ defmodule Tigela.Data.Transaction do
       :ok
       iex> Tigela.Data.Transaction.exists?("x")
       false
-      iex> Tigela.Data.Transaction.set(%Tigela.Data{key: "x", type: "string", value: "foo"})
+      iex> Tigela.Data.Transaction.set(%Tigela.Data.Model{key: "x", type: "string", value: "foo"})
       :ok
       iex> Tigela.Data.Transaction.exists?("x")
       true

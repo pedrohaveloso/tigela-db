@@ -1,4 +1,4 @@
-defmodule Tigela.Input.Parser do
+defmodule Tigela.Parser do
   @moduledoc """
   It analyses and parses input commands, converting them into internal
   structures.
@@ -17,24 +17,20 @@ defmodule Tigela.Input.Parser do
 
   ## Examples
 
-      iex> Tigela.Input.Parser.command("SETA x 10")
-      {:error, "No command SETA. Did you mean SET?"}
-      iex> Tigela.Input.Parser.command("SET x 10")
-      {:ok, {:set, %Tigela.Data{key: "x", type: "integer", value: "10"}}}
-      iex> Tigela.Input.Parser.command("SET x x 10")
-      {:error, "SET <key> <value> - Syntax error"}
-      iex> Tigela.Input.Parser.command("GET x")
+      iex> Tigela.Parser.command("SET x 10")
+      {:ok, {:set, %Tigela.Data.Model{key: "x", type: "integer", value: "10"}}}
+      iex> Tigela.Parser.command("GET x")
       {:ok, {:get, "x"}}
-      iex> Tigela.Input.Parser.command("BEGIN")
+      iex> Tigela.Parser.command("BEGIN")
       {:ok, {:begin}}
-      iex> Tigela.Input.Parser.command("ROLLBACK")
+      iex> Tigela.Parser.command("ROLLBACK")
       {:ok, {:rollback}}
-      iex> Tigela.Input.Parser.command("COMMIT")
+      iex> Tigela.Parser.command("COMMIT")
       {:ok, {:commit}}
   """
   @spec command(binary()) ::
           {:error, String.t()}
-          | {:ok, {atom()} | {:get, String.t()} | {:set, Tigela.Data.t()}}
+          | {:ok, {atom()} | {:get, String.t()} | {:set, Tigela.Data.Model.t()}}
   def command(input) when is_binary(input) do
     input = String.trim(input)
 
@@ -48,11 +44,13 @@ defmodule Tigela.Input.Parser do
       else: no_command(command)
   end
 
+  @doc false
   @spec parse_command(String.t(), String.t()) :: tuple()
   defp parse_command(input, "SET") do
     @set_regex
     |> Regex.compile!()
     |> Regex.run(input)
+    # TODO: improve this:
     |> case do
       [_, key, "", value, ""] -> parse_set_value(key, value)
       [_, "", key, value, ""] -> parse_set_value(key, value)
@@ -83,16 +81,18 @@ defmodule Tigela.Input.Parser do
     end
   end
 
+  @doc false
   @spec no_command(String.t()) :: {:error, String.t()}
   defp no_command(command) do
     most_similar = command |> String.upcase() |> most_similar_command()
 
     most_similar_message =
-      if is_nil(most_similar), do: "", else: "Did you mean #{most_similar}?"
+      if is_nil(most_similar), do: "", else: " Did you mean #{most_similar}?"
 
-    {:error, "No command #{command}. #{most_similar_message}"}
+    {:error, "No command #{command}.#{most_similar_message}"}
   end
 
+  @doc false
   @spec most_similar_command(String.t()) :: String.t() | nil
   defp most_similar_command(input) do
     @commands
@@ -101,10 +101,12 @@ defmodule Tigela.Input.Parser do
     |> then(fn {cmd, distance} -> if distance > 0.5, do: cmd, else: nil end)
   end
 
-  @spec parse_set_value(String.t(), String.t()) ::
-          {:ok, {atom(), Tigela.Data.t()}} | {:error, String.t()}
+  @doc false
+  @spec parse_set_value(String.t(), String.t()) :: {:error, String.t()}
   defp parse_set_value(_, "NIL"), do: {:error, "NIL value cannot be entered"}
 
+  @doc false
+  @spec parse_set_value(String.t(), String.t()) :: {:ok, tuple()}
   defp parse_set_value(key, value) do
     type =
       cond do
@@ -114,6 +116,6 @@ defmodule Tigela.Input.Parser do
         true -> "string"
       end
 
-    {:ok, {:set, %Tigela.Data{key: key, type: type, value: value}}}
+    {:ok, {:set, %Tigela.Data.Model{key: key, type: type, value: value}}}
   end
 end

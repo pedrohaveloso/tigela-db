@@ -6,6 +6,7 @@ defmodule Tigela.Data.PersistentTest do
 
   setup do
     File.rm_rf("./tmp/tigela_db/")
+
     :ok
   end
 
@@ -24,7 +25,7 @@ defmodule Tigela.Data.PersistentTest do
   test "set/1 and get/1 work correctly" do
     Persistent.start()
 
-    data = %Data{key: "x", type: "string", value: "foo"}
+    data = %Data.Model{key: "x", type: "string", value: "foo"}
     assert :ok == Persistent.set(data)
     assert Persistent.get("x") == data
   end
@@ -37,7 +38,7 @@ defmodule Tigela.Data.PersistentTest do
   test "exists?/1 returns true for existing keys" do
     Persistent.start()
 
-    data = %Data{key: "x", type: "string", value: "foo"}
+    data = %Data.Model{key: "x", type: "string", value: "foo"}
     Persistent.set(data)
 
     assert Persistent.exists?("x")
@@ -46,7 +47,7 @@ defmodule Tigela.Data.PersistentTest do
   test "delete/1 removes keys from storage" do
     Persistent.start()
 
-    data = %Data{key: "x", type: "string", value: "foo"}
+    data = %Data.Model{key: "x", type: "string", value: "foo"}
     Persistent.set(data)
     assert Persistent.exists?("x")
 
@@ -58,18 +59,18 @@ defmodule Tigela.Data.PersistentTest do
   test "set/1 properly sanitizes keys and values" do
     Persistent.start()
 
-    data = %Data{key: "weird[==λ==]key", type: "string", value: "weird[==λ==]value"}
+    data = %Data.Model{key: "weird[==λ==]key", type: "string", value: "weird[==λ==]value"}
     Persistent.set(data)
 
-    sanitized_data = %Data{key: "weird?key", type: "string", value: "weird?value"}
+    sanitized_data = %Data.Model{key: "weird?key", type: "string", value: "weird?value"}
     assert Persistent.get("weird?key") == sanitized_data
   end
 
   test "multiple sets and gets are consistent" do
     Persistent.start()
 
-    data1 = %Data{key: "x", type: "string", value: "foo"}
-    data2 = %Data{key: "y", type: "integer", value: "42"}
+    data1 = %Data.Model{key: "x", type: "string", value: "foo"}
+    data2 = %Data.Model{key: "y", type: "integer", value: "42"}
 
     Persistent.set(data1)
     Persistent.set(data2)

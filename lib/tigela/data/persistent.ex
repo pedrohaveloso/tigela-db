@@ -36,12 +36,12 @@ defmodule Tigela.Data.Persistent do
       :ok
       iex> Tigela.Data.Persistent.get("x")
       nil
-      iex> Tigela.Data.Persistent.set(%Tigela.Data{key: "x", type: "string", value: "foo"})
+      iex> Tigela.Data.Persistent.set(%Tigela.Data.Model{key: "x", type: "string", value: "foo"})
       :ok
       iex> Tigela.Data.Persistent.get("x")
-      %Tigela.Data{key: "x", type: "string", value: "foo"}
+      %Tigela.Data.Model{key: "x", type: "string", value: "foo"}
   """
-  @spec get(String.t()) :: Tigela.Data.t() | nil
+  @spec get(String.t()) :: Tigela.Data.Model.t() | nil
   def get(key) when is_binary(key) do
     data =
       read_data_file()
@@ -49,7 +49,7 @@ defmodule Tigela.Data.Persistent do
 
     case data do
       nil -> nil
-      _ -> %Tigela.Data{key: key, type: data["type"], value: data["value"]}
+      _ -> %Tigela.Data.Model{key: key, type: data["type"], value: data["value"]}
     end
   end
 
@@ -60,10 +60,10 @@ defmodule Tigela.Data.Persistent do
 
       iex> Tigela.Data.Persistent.start()
       :ok
-      iex> Tigela.Data.Persistent.set(%Tigela.Data{key: "x", type: "string", value: "foo"})
+      iex> Tigela.Data.Persistent.set(%Tigela.Data.Model{key: "x", type: "string", value: "foo"})
       :ok
   """
-  @spec set(Tigela.Data.t()) :: :ok | {:error, atom()}
+  @spec set(Tigela.Data.Model.t()) :: :ok | {:error, atom()}
   def set(data) do
     data = filter_set_data(data)
 
@@ -72,7 +72,7 @@ defmodule Tigela.Data.Persistent do
     |> write_data_file()
   end
 
-  @spec set(Tigela.Data.t()) :: Tigela.Data.t()
+  @spec set(Tigela.Data.Model.t()) :: Tigela.Data.Model.t()
   defp filter_set_data(data) do
     data
     |> Map.put(:key, String.replace(data.key, "[==λ==]", "?"))
@@ -88,7 +88,7 @@ defmodule Tigela.Data.Persistent do
       :ok
       iex> Tigela.Data.Persistent.exists?("x")
       false
-      iex> Tigela.Data.Persistent.set(%Tigela.Data{key: "x", type: "string", value: "foo"})
+      iex> Tigela.Data.Persistent.set(%Tigela.Data.Model{key: "x", type: "string", value: "foo"})
       :ok
       iex> Tigela.Data.Persistent.exists?("x")
       true
@@ -106,7 +106,7 @@ defmodule Tigela.Data.Persistent do
 
       iex> Tigela.Data.Persistent.start()
       :ok
-      iex> Tigela.Data.Persistent.set(%Tigela.Data{key: "x", type: "string", value: "foo"})
+      iex> Tigela.Data.Persistent.set(%Tigela.Data.Model{key: "x", type: "string", value: "foo"})
       :ok
       iex> Tigela.Data.Persistent.delete("x")
       :ok

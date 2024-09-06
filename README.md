@@ -1,13 +1,5 @@
 # TigelaDB
 
----
-
-TODOZAO MASSA:
-
-- MELHORAR O PARSER, SÓ POR DEUS AQUELE CÓDIGO...
-
----
-
 O TigelaDB é um banco de dados de chave/valor, com suporte para operações
 básicas e transações recursivas. É construído em Elixir, sem nenhuma dependência
 externa.
@@ -220,3 +212,9 @@ TRUE 20
 > GET x
 20
 ```
+
+# Conclusão
+
+Endereço de e-mail: <a href="mailto:contatopedrohalves@gmail.com">contatopedrohalves@gmail.com</a>.
+
+Telefone celular: <a href="tel:+5514920021247">14 92002-1247</a>.

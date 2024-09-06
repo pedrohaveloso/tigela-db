@@ -6,6 +6,7 @@ defmodule Tigela.Data.TransactionTest do
 
   setup do
     Transaction.start()
+
     :ok
   end
 
@@ -40,35 +41,35 @@ defmodule Tigela.Data.TransactionTest do
   end
 
   test "setting and getting data within transactions" do
-    data = %Data{key: "x", type: "string", value: "foo"}
+    data = %Data.Model{key: "x", type: "string", value: "foo"}
 
     assert Transaction.get("x") == nil
     assert Transaction.set(data) == {:error, "No active transaction"}
 
     assert Transaction.begin() == :ok
     assert Transaction.set(data) == :ok
-    assert Transaction.get("x") == %Data{key: "x", type: "string", value: "foo"}
+    assert Transaction.get("x") == %Data.Model{key: "x", type: "string", value: "foo"}
   end
 
   test "data does not persist after rollback" do
-    data = %Data{key: "x", type: "string", value: "foo"}
+    data = %Data.Model{key: "x", type: "string", value: "foo"}
 
     assert Transaction.begin() == :ok
     assert Transaction.set(data) == :ok
-    assert Transaction.get("x") == %Data{key: "x", type: "string", value: "foo"}
+    assert Transaction.get("x") == %Data.Model{key: "x", type: "string", value: "foo"}
     assert Transaction.rollback() == :ok
     assert Transaction.get("x") == nil
   end
 
   test "data persists after commit" do
-    data1 = %Data{key: "x", type: "string", value: "foo"}
-    data2 = %Data{key: "y", type: "integer", value: "42"}
+    data1 = %Data.Model{key: "x", type: "string", value: "foo"}
+    data2 = %Data.Model{key: "y", type: "integer", value: "42"}
 
     assert Transaction.begin() == :ok
     assert Transaction.set(data1) == :ok
     assert Transaction.set(data2) == :ok
-    assert Transaction.get("x") == %Data{key: "x", type: "string", value: "foo"}
-    assert Transaction.get("y") == %Data{key: "y", type: "integer", value: "42"}
+    assert Transaction.get("x") == %Data.Model{key: "x", type: "string", value: "foo"}
+    assert Transaction.get("y") == %Data.Model{key: "y", type: "integer", value: "42"}
 
     assert Transaction.commit() ==
              {:ok,
@@ -79,24 +80,24 @@ defmodule Tigela.Data.TransactionTest do
   end
 
   test "nested transactions with commit and rollback" do
-    data1 = %Data{key: "x", type: "string", value: "foo"}
-    data2 = %Data{key: "y", type: "integer", value: "42"}
+    data1 = %Data.Model{key: "x", type: "string", value: "foo"}
+    data2 = %Data.Model{key: "y", type: "integer", value: "42"}
 
     assert Transaction.begin() == :ok
     assert Transaction.set(data1) == :ok
 
     assert Transaction.begin() == :ok
     assert Transaction.set(data2) == :ok
-    assert Transaction.get("x") == %Data{key: "x", type: "string", value: "foo"}
-    assert Transaction.get("y") == %Data{key: "y", type: "integer", value: "42"}
+    assert Transaction.get("x") == %Data.Model{key: "x", type: "string", value: "foo"}
+    assert Transaction.get("y") == %Data.Model{key: "y", type: "integer", value: "42"}
 
     assert Transaction.rollback() == :ok
-    assert Transaction.get("x") == %Data{key: "x", type: "string", value: "foo"}
+    assert Transaction.get("x") == %Data.Model{key: "x", type: "string", value: "foo"}
     assert Transaction.get("y") == nil
   end
 
   test "checking if a key exists" do
-    data = %Data{key: "x", type: "string", value: "foo"}
+    data = %Data.Model{key: "x", type: "string", value: "foo"}
 
     assert not Transaction.exists?("x")
 
