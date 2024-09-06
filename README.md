@@ -4,7 +4,6 @@
 
 TODOZAO MASSA:
 
-- ADICIONAR DOCKER
 - MELHORAR O PARSER, SÓ POR DEUS AQUELE CÓDIGO...
 
 ---
@@ -13,29 +12,79 @@ O TigelaDB é um banco de dados de chave/valor, com suporte para operações
 básicas e transações recursivas. É construído em Elixir, sem nenhuma dependência
 externa.
 
+# Sumário
+
+- [**Como rodar**](#como-rodar)
+  - [Rodando com Elixir/Erlang](#rodando-com-elixirerlang)
+  - [Rodando com Docker](#rodando-com-docker)
+- [**Funcionalidades**](#funcionalidades)
+  - [SET](#set)
+  - [GET](#get)
+  - [BEGIN](#begin)
+  - [ROLLBACK](#rollback)
+  - [COMMIT](#commit)
+
 # Como rodar
 
-Espera-se que, para rodar o projeto, você tenha uma versão do Elixir superior a
-1.16 instalada em sua máquina, além do Erlang.
+Existem duas maneiras de rodar o projeto, utilizando Docker ou o próprio Elixir/Erlang instalado em sua máquina. Veremos as duas formas.
 
 Primeiramente, clone o repositório em seu computador com:
 
 ```bash
-$ git clone https://github.com/pedrohaveloso/tigela-db.git
+λ git clone https://github.com/pedrohaveloso/tigela-db.git
 ```
 
-Após, entre na pasta do projeto e construa o executável usando o `mix escript.build`:
+Após, entre na pasta do projeto:
 
 ```bash
-$ cd ./tigela-db
+λ cd ./tigela-db
+```
 
-$ mix escript.build
+## Rodando com Elixir/Erlang
+
+Espera-se que, para rodar dessa maneira, você tenha uma versão do Elixir superior a
+1.16 instalada em sua máquina, além do Erlang.
+
+Dentro da pasta, faça:
+
+```bash
+λ mix escript.build
 ```
 
 Agora, basta rodar o executável criado:
 
 ```bash
-$ ./tigela
+λ ./tigela
+```
+
+Para rodar a bateria de testes, execute:
+
+```bash
+λ mix test
+```
+
+## Rodando com Docker
+
+Espera-se que, para rodar dessa maneira, você tenha o Docker instalado em sua máquina.
+
+Dentro da pasta, rode o comando abaixo para construir a imagem:
+
+```bash
+λ  docker build -t tigela-db .
+```
+
+Agora, inicie o container com a imagem:
+
+```bash
+λ docker run --init -it tigela-db
+```
+
+O programa estará rodando no Docker.
+
+Para rodar a bateria de testes, execute:
+
+```bash
+λ docker run --rm tigela-db mix test
 ```
 
 # Funcionalidades
@@ -120,4 +169,54 @@ Exemplos:
 
 > BEGIN
 2
+```
+
+## ROLLBACK
+
+Desfaz uma transação e descarta todos os dados modificados ou adicionados durante ela.
+
+**Sintaxe**: `ROLLBACK`
+
+Após ser executado, uma saída ocorre contendo o nível atual de transação.
+
+Exemplos:
+
+```bash
+> BEGIN
+1
+> SET x 10
+FALSE 10
+> BEGIN
+2
+> SET x 20
+TRUE 20
+> ROLLBACK
+1
+> ROLLBACK
+0
+> GET x
+NIL
+```
+
+## COMMIT
+
+Completa uma transação e salva todos os seus dados e modificações. Caso hajam outras transações anteriores a atual, os dados são salvos nela. Caso a transação atual seja única, os dados são salvos de maneira persistente.
+
+**Sintaxe**: `COMMIT`
+
+Após ser executado, uma saída ocorre contendo o nível atual de transação.
+
+Exemplos:
+
+```bash
+> SET x 10
+FALSE 10
+> BEGIN
+1
+> SET x 20
+TRUE 20
+> COMMIT
+0
+> GET x
+20
 ```

@@ -5,7 +5,7 @@ defmodule Tigela do
   @prompt "> "
 
   def main(_) do
-    IO.puts("--- Starting TigelaDB 0.0.1 ---")
+    IO.puts("———— Starting TigelaDB (v0.0.1) ————")
 
     Data.Persistent.start()
     Data.Transaction.start()
@@ -14,45 +14,55 @@ defmodule Tigela do
   end
 
   def program() do
-    command = IO.gets(@prompt) |> Input.Parser.command()
+    case IO.gets(@prompt) do
+      :eof ->
+        exit("Bye bye")
 
-    case command do
-      {:ok, value} ->
-        command(value)
+      {:error, _} ->
+        puts_error("Unknown error")
+
+      command ->
+        command
+        |> Input.Parser.command()
         |> case do
-          {:ok, msg} -> IO.inspect(msg)
-          {:error, reason} -> IO.puts("ERR \"#{reason}\"")
-        end
+          {:ok, value} ->
+            case command(value) do
+              {:ok, message} -> puts_message(message)
+              {:error, reason} -> puts_error(reason)
+            end
 
-      {:error, reason} ->
-        IO.puts(reason)
+          {:error, reason} ->
+            puts_error(reason)
+        end
     end
 
     program()
   end
 
-  def command({:set, key, value}) do
+  def command({:set, %Tigela.Data{key: key, type: type, value: value}}) do
     exists =
       if Data.Transaction.level() > 0 do
         exists = Data.Transaction.exists?(key)
-        Data.Transaction.set(%Data{key: key, type: "string", value: value})
+        Data.Transaction.set(%Data{key: key, type: type, value: value})
         if exists, do: true, else: Data.Persistent.exists?(key)
       else
         exists = Data.Persistent.exists?(key)
-        Data.Persistent.set(%Data{key: key, type: "string", value: value})
+        Data.Persistent.set(%Data{key: key, type: type, value: value})
         exists
       end
 
-    {:ok, "#{exists} #{value}"}
+    {:ok, "#{if exists, do: "TRUE", else: "FALSE"} #{value}"}
   end
 
   def command({:get, key}) do
-    value =
+    data =
       if Data.Transaction.level() > 0 do
         Data.Transaction.get(key)
       else
         Data.Persistent.get(key)
       end
+
+    value = if data == nil, do: "NIL", else: data.value
 
     {:ok, value}
   end
@@ -84,5 +94,15 @@ defmodule Tigela do
       {:error, reason} ->
         {:error, reason}
     end
+  end
+
+  @spec puts_error(String.t()) :: :ok
+  defp puts_error(reason) do
+    IO.puts("ERR \"#{reason}\"")
+  end
+
+  @spec puts_message(String.t()) :: :ok
+  defp puts_message(message) do
+    IO.puts(message)
   end
 end
