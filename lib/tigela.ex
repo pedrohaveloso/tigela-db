@@ -4,10 +4,11 @@ defmodule Tigela do
   alias Tigela.Processor
 
   @prompt "> "
+  @program_starting_title "———— Starting TigelaDB (v0.0.1) ————"
 
   @spec main(any()) :: no_return()
   def main(_) do
-    IO.puts("———— Starting TigelaDB (v0.0.1) ————")
+    IO.puts(@program_starting_title)
 
     Data.Persistent.start()
     Data.Transaction.start()
@@ -15,7 +16,6 @@ defmodule Tigela do
     program()
   end
 
-  @doc false
   @spec program() :: no_return()
   defp program() do
     case IO.gets(@prompt) do
@@ -27,14 +27,16 @@ defmodule Tigela do
     program()
   end
 
-  @doc false
-  @spec process(String.t()) :: :ok
-  defp process(command) do
+  @spec process(String.t()) :: {:error, String.t()} | {:ok, String.t()}
+  def process(command) do
     with {:ok, parsed_command} <- Parser.command(command),
          {:ok, message} <- Processor.run_command(parsed_command) do
       puts_message(message)
+      {:ok, message}
     else
-      {:error, reason} -> puts_error(reason)
+      {:error, reason} ->
+        puts_error(reason)
+        {:error, reason}
     end
   end
 

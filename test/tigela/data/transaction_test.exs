@@ -12,7 +12,7 @@ defmodule Tigela.Data.TransactionTest do
 
   doctest Transaction
 
-  test "starting a transacction" do
+  test "starting a transaction" do
     assert Transaction.start() == :ok
   end
 

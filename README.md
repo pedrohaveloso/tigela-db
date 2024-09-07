@@ -17,6 +17,7 @@ externa.
   - [BEGIN](#begin)
   - [ROLLBACK](#rollback)
   - [COMMIT](#commit)
+- [**Contatos e links**](#contatos-e-links)
 
 # Como rodar
 
@@ -215,8 +216,10 @@ TRUE 20
 20
 ```
 
-# Conclusão
+# Contatos e links
 
 Endereço de e-mail: <a href="mailto:contatopedrohalves@gmail.com">contatopedrohalves@gmail.com</a>.
 
 Telefone celular: <a href="tel:+5514920021247">14 92002-1247</a>.
+
+Banner (Figma): [www.figma.com/design/tigela-db](https://www.figma.com/design/q8KGVvP3kutnkk4KcEVrLG/Desafio---TigelaDB?node-id=0-1&t=tx9PvPkAq2fjLVXk-1).
