@@ -219,6 +219,8 @@ TRUE 20
 
 # Considerações finais
 
+[![Vídeo do projeto rodando](./video.mp4)](./video.mp4)
+
 Fiquei contente com o resultado alcançando do banco. Não possuo profundos conhecimentos em Elixir, nem na criação de bancos mais complexos, mas creio que o resultado seja satisfatório para o objetivo proposto pelo desafio, um banco chave/valor para uso via terminal de comando.
 
 Sem dúvidas, não poderia ser utilizado de outra forma, pois a persistência de dados ocorre via leitura/escrita de um arquivo, o que pode tornar lento o processo caso vários SETs/GETs sejam feitos ao mesmo tempo.
