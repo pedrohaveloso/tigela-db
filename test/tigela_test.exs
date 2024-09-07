@@ -180,7 +180,7 @@ defmodule TigelaTest do
   end
 
   test "unsupported command should return error" do
-    assert {:error, "No command TRY."} = Tigela.process("TRY")
+    assert {:error, "No command TRY"} = Tigela.process("TRY")
   end
 
   test "COMMIT on transaction level 0 should return error" do

@@ -72,7 +72,7 @@ defmodule Tigela.ParserTest do
 
     test "returns error for invalid commands" do
       assert {:error, "No command SETA. Did you mean SET?"} = Parser.command("SETA x 10")
-      assert {:error, "No command FOO."} = Parser.command("FOO")
+      assert {:error, "No command FOO"} = Parser.command("FOO")
     end
 
     test "returns error for syntax errors" do

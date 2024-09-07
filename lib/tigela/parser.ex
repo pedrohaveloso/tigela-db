@@ -85,9 +85,9 @@ defmodule Tigela.Parser do
     most_similar = command |> String.upcase() |> most_similar_command()
 
     most_similar_message =
-      if is_nil(most_similar), do: "", else: " Did you mean #{most_similar}?"
+      if is_nil(most_similar), do: "", else: ". Did you mean #{most_similar}?"
 
-    {:error, "No command #{command}.#{most_similar_message}"}
+    {:error, "No command #{command}#{most_similar_message}"}
   end
 
   @doc false
