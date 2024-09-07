@@ -123,32 +123,35 @@ defmodule Tigela.Data.Persistent do
   @doc false
   @spec read_data_file() :: map()
   defp read_data_file() do
-    with {:ok, content} <- File.read(@data_file) do
-      content
-      |> String.split("\n", trim: true)
-      |> Enum.reduce(%{}, fn line, acc ->
-        case Regex.run(@data_file_regex, line) do
-          [_, type, key, value] ->
-            Map.put(acc, key, %{"type" => type, "value" => value})
+    case File.read(@data_file) do
+      {:ok, content} ->
+        content
+        |> String.split("\n", trim: true)
+        |> Enum.reduce(%{}, fn line, acc ->
+          case Regex.run(@data_file_regex, line) do
+            [_, type, key, value] ->
+              Map.put(acc, key, %{"type" => type, "value" => value})
 
-          _ ->
-            acc
-        end
-      end)
-    else
-      _ -> %{}
+            _ ->
+              acc
+          end
+        end)
+
+      _ ->
+        %{}
     end
   end
 
   @doc false
   @spec write_data_file(map()) :: :ok | {:error, atom()}
   defp write_data_file(content) do
-    File.write(
-      @data_file,
-      Enum.map(content, fn {key, %{"type" => type, "value" => value}} ->
+    content =
+      content
+      |> Enum.map(fn {key, %{"type" => type, "value" => value}} ->
         "[#{type}]#{key}[==λ==]#{value}"
       end)
       |> Enum.join("\n")
-    )
+
+    File.write(@data_file, content)
   end
 end

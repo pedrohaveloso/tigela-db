@@ -72,4 +72,8 @@ defmodule Tigela.Processor do
         {:error, reason}
     end
   end
+
+  def run_command(_) do
+    {:error, "Internal, invalid command"}
+  end
 end

@@ -17,6 +17,7 @@ externa.
   - [BEGIN](#begin)
   - [ROLLBACK](#rollback)
   - [COMMIT](#commit)
+- [**Considerações finais**](#consideracoes-finais)
 - [**Contatos e links**](#contatos-e-links)
 
 # Como rodar
@@ -215,6 +216,8 @@ TRUE 20
 > GET x
 20
 ```
+
+# Considerações finais
 
 # Contatos e links
 

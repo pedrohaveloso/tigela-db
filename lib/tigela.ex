@@ -4,11 +4,11 @@ defmodule Tigela do
   alias Tigela.Processor
 
   @prompt "> "
-  @program_starting_title "———— Starting TigelaDB (v0.0.1) ————"
+  @title "———— TigelaDB (v0.0.1) ————"
 
   @spec main(any()) :: no_return()
   def main(_) do
-    IO.puts(@program_starting_title)
+    IO.puts(@title)
 
     Data.Persistent.start()
     Data.Transaction.start()
@@ -43,7 +43,7 @@ defmodule Tigela do
   @doc false
   @spec puts_error(String.t()) :: :ok
   defp puts_error(reason) do
-    IO.puts("ERR \"#{reason}\"")
+    IO.puts("ERR \"#{reason}\".")
   end
 
   @doc false
