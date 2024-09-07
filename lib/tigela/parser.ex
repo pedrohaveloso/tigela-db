@@ -48,7 +48,6 @@ defmodule Tigela.Parser do
     @set_regex
     |> Regex.compile!()
     |> Regex.run(input)
-    # TODO: improve this:
     |> case do
       [_, key, "", value, ""] -> parse_set_value(key, value)
       [_, "", key, value, ""] -> parse_set_value(key, value)
