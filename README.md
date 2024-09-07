@@ -17,7 +17,7 @@ externa.
   - [BEGIN](#begin)
   - [ROLLBACK](#rollback)
   - [COMMIT](#commit)
-- [**Considerações finais**](#consideracoes-finais)
+- [**Considerações finais**](#considerações-finais)
 - [**Contatos e links**](#contatos-e-links)
 
 # Como rodar
@@ -218,6 +218,12 @@ TRUE 20
 ```
 
 # Considerações finais
+
+Fiquei contente com o resultado alcançando do banco. Não possuo profundos conhecimentos em Elixir, nem na criação de bancos mais complexos, mas creio que o resultado seja satisfatório para o objetivo proposto pelo desafio, um banco chave/valor para uso via terminal de comando.
+
+Sem dúvidas, não poderia ser utilizado de outra forma, pois a persistência de dados ocorre via leitura/escrita de um arquivo, o que pode tornar lento o processo caso vários SETs/GETs sejam feitos ao mesmo tempo.
+
+Lendo mais sobre bancos (para alguma base na solução do desafio), descobri formas de otimização, como b-tree e semelhantes, mas não tive a capacidade de implementar algo assim na solução.
 
 # Contatos e links
 
