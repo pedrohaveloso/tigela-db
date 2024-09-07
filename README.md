@@ -219,7 +219,7 @@ TRUE 20
 
 # Considerações finais
 
-[![Vídeo do projeto rodando](./video.mp4)](./video.mp4)
+![GIF do projeto rodando](./video.gif)
 
 Fiquei contente com o resultado alcançando do banco. Não possuo profundos conhecimentos em Elixir, nem na criação de bancos mais complexos, mas creio que o resultado seja satisfatório para o objetivo proposto pelo desafio, um banco chave/valor para uso via terminal de comando.
 
