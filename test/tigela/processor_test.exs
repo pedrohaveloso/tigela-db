@@ -4,15 +4,16 @@ defmodule Tigela.ProcessorTest do
   alias Tigela.Processor
   alias Tigela.Data.{Model, Transaction, Persistent}
 
-  doctest Processor
-
   setup do
     File.rm_rf("./tmp/tigela_db/")
+
     Persistent.start()
     Transaction.start()
 
     :ok
   end
+
+  doctest Processor
 
   test "run_command/1 with :set and no existing key" do
     data = %Model{key: "x", type: "string", value: "foo"}

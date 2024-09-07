@@ -4,11 +4,6 @@ defmodule Tigela.Data.Transaction do
 
   Transactions can be nested, and the module supports handling key/value pairs
   within the context of these transactions.
-
-  ## Examples
-
-      iex> Tigela.Data.Transaction.start()
-      :ok
   """
 
   use Agent
@@ -20,18 +15,27 @@ defmodule Tigela.Data.Transaction do
   @doc """
   Initiates transaction state. It must be started before using any other
   function in the module.
-
-  ## Examples
-
-      iex> Tigela.Data.Transaction.start()
-      :ok
   """
   @spec start() :: :ok
   def start() do
+    stop()
+
     Agent.start_link(
       fn -> %Tigela.Data.Transaction{} end,
       name: __MODULE__
     )
+
+    :ok
+  end
+
+  @doc false
+  @spec stop() :: :ok
+  defp stop() do
+    pid = Process.whereis(__MODULE__)
+
+    if is_pid(pid) and Process.alive?(pid) do
+      Agent.stop(__MODULE__)
+    end
 
     :ok
   end
@@ -313,12 +317,26 @@ defmodule Tigela.Data.Transaction do
   @doc false
   @spec update_state((%Tigela.Data.Transaction{} -> %Tigela.Data.Transaction{})) :: :ok
   defp update_state(fun) do
+    start_state()
     Agent.update(__MODULE__, fun)
   end
 
   @doc false
   @spec get_state((%Tigela.Data.Transaction{} -> a)) :: a when a: var
   defp get_state(fun) do
+    start_state()
     Agent.get(__MODULE__, fun)
+  end
+
+  @doc false
+  @spec start_state() :: :ok
+  defp start_state() do
+    pid = Process.whereis(__MODULE__)
+
+    unless is_pid(pid) and Process.alive?(pid) do
+      start()
+    end
+
+    :ok
   end
 end
