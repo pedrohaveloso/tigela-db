@@ -7,7 +7,7 @@ defmodule Tigela.Parser do
   @commands ["BEGIN", "COMMIT", "ROLLBACK", "GET", "SET"]
 
   @key_regex "(?:'((?:\\\\'|[^'])*)'|(\\S+))"
-  @value_regex "(?:(\"(?:\\\"|[^\"])+\")|(\\d+(?:\\.\\d+)?|TRUE|FALSE|\\S+))"
+  @value_regex "(?:(\"(?:\\\\\"|[^\"])+\")|(\\d+(?:\\.\\d+)?|TRUE|FALSE|\\S+))"
 
   @get_regex "^GET\\s+#{@key_regex}$"
   @set_regex "^SET\\s+#{@key_regex}\\s+#{@value_regex}$"

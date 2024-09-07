@@ -65,9 +65,9 @@ defmodule Tigela.ParserTest do
                %Tigela.Data.Model{
                  key: "complex key",
                  type: "string",
-                 value: "\"complex value\""
+                 value: "\"complex \\\" value\""
                }}} =
-               Parser.command("SET 'complex key' \"complex value\"")
+               Parser.command("SET 'complex key' \"complex \\\" value\"")
     end
 
     test "returns error for invalid commands" do
@@ -77,6 +77,10 @@ defmodule Tigela.ParserTest do
 
     test "returns error for syntax errors" do
       assert {:error, "SET <key> <value> - Syntax error"} = Parser.command("SET x")
+
+      assert {:error, "SET <key> <value> - Syntax error"} =
+               Parser.command("SET x \"hello \" world\"")
+
       assert {:error, "GET <key> - Syntax error"} = Parser.command("GET x y")
       assert {:error, "BEGIN - Syntax error"} = Parser.command("BEGIN transaction")
     end
