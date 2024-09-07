@@ -28,9 +28,7 @@ defmodule Tigela.Parser do
       iex> Tigela.Parser.command("COMMIT")
       {:ok, {:commit}}
   """
-  @spec command(binary()) ::
-          {:error, String.t()}
-          | {:ok, {atom()} | {:get, String.t()} | {:set, Tigela.Data.Model.t()}}
+  @spec command(binary()) :: {:ok, tuple()} | {:error, String.t()}
   def command(input) when is_binary(input) do
     input = String.trim(input)
 
