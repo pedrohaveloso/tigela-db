@@ -14,6 +14,20 @@ defmodule TigelaTest do
 
   doctest Tigela
 
+  test "stress test" do
+    result =
+      Enum.map(1..1000, fn s ->
+        Tigela.process("SET #{s} #{s}")
+      end)
+
+    expected =
+      Enum.map(1..1000, fn s ->
+        {:ok, "FALSE #{s}"}
+      end)
+
+    assert result == expected
+  end
+
   test "SET command with integer value" do
     assert {:ok, "FALSE 10"} = Tigela.process("SET integer_key 10")
   end
@@ -109,7 +123,7 @@ defmodule TigelaTest do
     assert {:ok, 1} = Tigela.process("BEGIN")
   end
 
-  test "Nested BEGIN commands" do
+  test "nested BEGIN commands" do
     Tigela.process("BEGIN")
 
     assert {:ok, 2} = Tigela.process("BEGIN")
@@ -135,7 +149,7 @@ defmodule TigelaTest do
     assert {:ok, "200"} = Tigela.process("GET trans_key")
   end
 
-  test "Nested transactions and COMMIT behavior" do
+  test "nested transactions and COMMIT behavior" do
     Tigela.process("BEGIN")
     Tigela.process("SET nested_key 300")
     Tigela.process("BEGIN")
@@ -146,7 +160,7 @@ defmodule TigelaTest do
     assert {:ok, "300"} = Tigela.process("GET nested_key")
   end
 
-  test "Nested transactions and ROLLBACK behavior" do
+  test "nested transactions and ROLLBACK behavior" do
     Tigela.process("BEGIN")
     Tigela.process("SET nested_key 500")
     Tigela.process("BEGIN")
@@ -165,7 +179,7 @@ defmodule TigelaTest do
     assert {:error, "GET <key> - Syntax error"} = Tigela.process("GET key extra_arg")
   end
 
-  test "Unsupported command should return error" do
+  test "unsupported command should return error" do
     assert {:error, "No command TRY."} = Tigela.process("TRY")
   end
 

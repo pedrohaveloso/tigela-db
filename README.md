@@ -66,7 +66,7 @@ Espera-se que, para rodar dessa maneira, você tenha o Docker instalado em sua m
 Dentro da pasta, rode o comando abaixo para construir a imagem:
 
 ```bash
-λ  docker build -t tigela-db .
+λ docker build -t tigela-db .
 ```
 
 Agora, inicie o container com a imagem:

@@ -50,6 +50,7 @@ defmodule Tigela.ProcessorTest do
   test "run_command/1 with :rollback rolls back the transaction" do
     Processor.run_command({:begin})
     Processor.run_command({:set, %Model{key: "x", type: "string", value: "foo"}})
+
     assert {:ok, 0} = Processor.run_command({:rollback})
     assert Persistent.get("x") == nil
   end
@@ -61,6 +62,7 @@ defmodule Tigela.ProcessorTest do
   test "run_command/1 with :commit commits the transaction" do
     Processor.run_command({:begin})
     Processor.run_command({:set, %Model{key: "x", type: "string", value: "foo"}})
+
     assert {:ok, 0} = Processor.run_command({:commit})
     assert Persistent.get("x").value == "foo"
   end
