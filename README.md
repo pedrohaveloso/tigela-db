@@ -1,6 +1,6 @@
 # TigelaDB
 
-![Banner do TigelaDB](./banner.png)
+![Banner do TigelaDB](./abanner.png)
 
 O TigelaDB é um banco de dados de chave/valor, com suporte para operações
 básicas e transações recursivas. É construído em Elixir, sem nenhuma dependência
